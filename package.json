@@ -1,0 +1,22 @@
+{
+  "name": "sticker_downloader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "fetch": "^1.1.0",
+    "node-fetch": "^2.0.0",
+    "node-telegram-bot-api": "^0.54.0",
+    "tgs-to-gif": "git+https://github.com/ed-asriyan/tgs-to-gif.git",
+    "webp-converter": "^2.3.3"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "lint": "yarn run eslint"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.1",
+    "eslint-config-google": "^0.14.0",
+    "https-proxy-agent": "^5.0.0"
+  }
+}
