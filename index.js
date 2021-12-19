@@ -5,8 +5,9 @@ const fs = require('fs')
 const HttpsProxyAgent = require('https-proxy-agent')
 const webp = require('webp-converter')
 
+const configFile = JSON.parse(fs.readFileSync('config.json', 'utf-8'))
 // replace your telegram bot tocken here
-const token = ''
+const token = configFile.token
 const bot = new TelegramBot(token, { polling: true })
 
 // download file using node-fetch
@@ -28,8 +29,8 @@ bot.on('message', (msg) => {
   console.log(msg)
   // only process stickers
   if (msg.sticker) {
-    // processing animated sticker
     if (msg.sticker.is_animated) {
+      // processing animated sticker
       bot.sendMessage(chatId, 'Decoding and Processing...', { reply_to_message_id: messageId })
         .then((newmsg) => {
           const newmsgId = newmsg.message_id
@@ -55,6 +56,7 @@ bot.on('message', (msg) => {
             })
         })
     } else {
+      // proccessing normal sticker
       bot.sendMessage(chatId, 'Processing...', { reply_to_message_id: messageId })
         .then((newmsg) => {
           const newmsgId = newmsg.message_id
@@ -82,6 +84,6 @@ bot.on('message', (msg) => {
         )
     }
   } else {
-    bot.sendMessage(chatId, 'Please send a sticker to me.', { reply_to_message_id: messageId })
+    bot.sendMessage(chatId, 'Please send a sticker or gif to me.', { reply_to_message_id: messageId })
   }
 })

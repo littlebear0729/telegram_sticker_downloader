@@ -121,3 +121,5 @@ dist
 .idea/
 
 file/*
+
+config.json
