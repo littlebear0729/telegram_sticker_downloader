@@ -4,6 +4,8 @@ const fetch = require('node-fetch')
 const fs = require('fs')
 const HttpsProxyAgent = require('https-proxy-agent')
 const webp = require('webp-converter')
+const ffmpeg = require('fluent-ffmpeg')
+const { resolve } = require('eslint-plugin-promise/rules/lib/promise-statics')
 
 const configFile = JSON.parse(fs.readFileSync('config.json', 'utf-8'))
 // replace your telegram bot tocken here
@@ -83,6 +85,31 @@ bot.on('message', (msg) => {
         }
         )
     }
+  } else if (msg.animation) {
+    bot.sendMessage(chatId, 'Downloading and Processing GIF...', { reply_to_message_id: messageId })
+      .then((newmsg) => {
+        const newmsgId = newmsg.message_id
+        const fileID = msg.document.file_id
+        const filename = msg.document.file_unique_id + '.mp4'
+        // download GIF using fileID and get link
+        bot.getFileLink(fileID)
+          .then((link) => {
+            downloadFile(link, 'file/' + filename)
+              .then(() => {
+                // convert file from .mp4 to .gif
+                ffmpeg('file/' + filename)
+                  .save('file/' + filename + '.gif')
+                  .on('end', function () {
+                    bot.editMessageText('Sending...', { chat_id: chatId, message_id: newmsgId })
+                    const file = fs.createReadStream('file/' + filename + '.gif')
+                    bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, { filename: filename + '.gif.1' })
+                      .then(function () {
+                        bot.deleteMessage(chatId, newmsgId)
+                      })
+                  })
+              })
+          })
+      })
   } else {
     bot.sendMessage(chatId, 'Please send a sticker or gif to me.', { reply_to_message_id: messageId })
   }

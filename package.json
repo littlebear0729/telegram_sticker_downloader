@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "fetch": "^1.1.0",
-    "ffmpeg.js": "^4.2.9003",
+    "fluent-ffmpeg": "^2.1.2",
     "node-fetch": "^2.0.0",
     "node-telegram-bot-api": "^0.54.0",
     "tgs-to-gif": "git+https://github.com/ed-asriyan/tgs-to-gif.git",
