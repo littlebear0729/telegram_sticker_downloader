@@ -5,7 +5,6 @@ const fs = require('fs')
 const HttpsProxyAgent = require('https-proxy-agent')
 const webp = require('webp-converter')
 const ffmpeg = require('fluent-ffmpeg')
-const { resolve } = require('eslint-plugin-promise/rules/lib/promise-statics')
 
 const configFile = JSON.parse(fs.readFileSync('config.json', 'utf-8'))
 // replace your telegram bot tocken here
@@ -33,23 +32,50 @@ bot.on('message', (msg) => {
   if (msg.sticker) {
     if (msg.sticker.is_animated) {
       // processing animated sticker
-      bot.sendMessage(chatId, 'Decoding and Processing...', { reply_to_message_id: messageId })
+      bot.sendMessage(chatId, 'Animated sticker detected.\nDecoding and Processing...', { reply_to_message_id: messageId })
         .then((newmsg) => {
           const newmsgId = newmsg.message_id
           const fileID = msg.sticker.file_id
-          const filename = msg.sticker.set_name + '_' + msg.sticker.file_unique_id
+          const filename = `${msg.sticker.set_name}_${msg.sticker.file_unique_id}`
           // download sticker using fileID and get link
           bot.getFileLink(fileID)
             .then((link) => {
-              downloadFile(link, 'file/' + filename + '.tgs')
+              downloadFile(link, `file/${filename}.tgs`)
                 .then(() => {
                   // convert file from .tgs to .gif
-                  Convertor.convertFile('file/' + filename + '.tgs')
+                  Convertor.convertFile(`file/${filename}.tgs`)
                     .then(() => {
                       bot.editMessageText('Sending...', { chat_id: chatId, message_id: newmsgId })
-                      const file = fs.createReadStream('file/' + filename + '.tgs.gif')
+                      const file = fs.createReadStream(`file/${filename}.tgs.gif`)
                       // send file renaming it to .gif.1
-                      bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, { filename: filename + '.gif.1' })
+                      bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, { filename: `${filename}.gif.1` })
+                        .then(function () {
+                          bot.deleteMessage(chatId, newmsgId)
+                        })
+                    })
+                })
+            })
+        })
+    } else if (msg.sticker.is_video) {
+      // processing video sticker
+      bot.sendMessage(chatId, 'Video sticker detected.\nDecoding and Processing...', { reply_to_message_id: messageId })
+        .then((newmsg) => {
+          const newmsgId = newmsg.message_id
+          const fileID = msg.sticker.file_id
+          const filename = `${msg.sticker.set_name}_${msg.sticker.file_unique_id}.webm`
+          // download sticker using fileID and get link
+          bot.getFileLink(fileID)
+            .then((link) => {
+              downloadFile(link, 'file/' + filename)
+                .then(() => {
+                  // convert file from .webm to .gif
+                  console.log(`file downloaded to file/${filename}`)
+                  ffmpeg(`file/${filename}`)
+                    .save(`file/${filename}.gif`)
+                    .on('end', function () {
+                      bot.editMessageText('Sending...', { chat_id: chatId, message_id: newmsgId })
+                      const file = fs.createReadStream(`file/${filename}.gif`)
+                      bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, { filename: `${filename}.gif.1` })
                         .then(function () {
                           bot.deleteMessage(chatId, newmsgId)
                         })
@@ -59,50 +85,52 @@ bot.on('message', (msg) => {
         })
     } else {
       // proccessing normal sticker
-      bot.sendMessage(chatId, 'Processing...', { reply_to_message_id: messageId })
+      bot.sendMessage(chatId, 'Normal sticker detected.\nProcessing...', { reply_to_message_id: messageId })
         .then((newmsg) => {
           const newmsgId = newmsg.message_id
           const fileID = msg.sticker.file_id
-          const filename = msg.sticker.set_name + '_' + msg.sticker.file_unique_id
+          const filename = `${msg.sticker.set_name}_${msg.sticker.file_unique_id}`
           bot.getFileLink(fileID)
             .then((link) => {
               // download sticker
-              downloadFile(link, 'file/' + filename + '.webp')
+              downloadFile(link, `file/${filename}.webp`)
                 .then(function () {
                   // convert sticker from webp to .png using webp.dwebp
-                  webp.dwebp('file/' + filename + '.webp', 'file/' + filename + '.png', '-o', '-v')
+                  webp.dwebp(`file/${filename}.webp`, `file/${filename}.png`, '-o', '-v')
                     .then(function () {
                       bot.editMessageText('Sending...', { chat_id: chatId, message_id: newmsgId })
-                      const file = fs.createReadStream('file/' + filename + '.png')
+                      const file = fs.createReadStream(`file/${filename}.png`)
                       // send file renaming to .png
-                      bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, { filename: filename + '.png' })
+                      bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, {
+                        filename: `${filename}.png`, contentType: 'image/png'
+                      })
                         .then(function () {
                           bot.deleteMessage(chatId, newmsgId)
                         })
                     })
                 })
             })
-        }
-        )
+        })
     }
   } else if (msg.animation) {
-    bot.sendMessage(chatId, 'Downloading and Processing GIF...', { reply_to_message_id: messageId })
+    // process gif download
+    bot.sendMessage(chatId, 'GIF detected.\nDownloading and Processing GIF...', { reply_to_message_id: messageId })
       .then((newmsg) => {
         const newmsgId = newmsg.message_id
         const fileID = msg.document.file_id
-        const filename = msg.document.file_unique_id + '.mp4'
+        const filename = `${msg.document.file_unique_id}.mp4`
         // download GIF using fileID and get link
         bot.getFileLink(fileID)
           .then((link) => {
-            downloadFile(link, 'file/' + filename)
+            downloadFile(link, `file/${filename}`)
               .then(() => {
                 // convert file from .mp4 to .gif
-                ffmpeg('file/' + filename)
-                  .save('file/' + filename + '.gif')
+                ffmpeg(`file/${filename}`)
+                  .save(`file/${filename}.gif`)
                   .on('end', function () {
                     bot.editMessageText('Sending...', { chat_id: chatId, message_id: newmsgId })
-                    const file = fs.createReadStream('file/' + filename + '.gif')
-                    bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, { filename: filename + '.gif.1' })
+                    const file = fs.createReadStream(`file/${filename}.gif`)
+                    bot.sendDocument(chatId, file, { reply_to_message_id: messageId }, { filename: `${filename}.gif.1` })
                       .then(function () {
                         bot.deleteMessage(chatId, newmsgId)
                       })
