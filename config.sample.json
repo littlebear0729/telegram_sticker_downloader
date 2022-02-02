@@ -1,3 +1,6 @@
 {
-  "token": "REPLACE YOUR TELEGRAM TOKEN HERE"
+  "token": "REPLACE YOUR TELEGRAM TOKEN HERE",
+  "whitelist": [
+    10000000
+  ]
 }

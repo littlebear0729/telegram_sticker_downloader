@@ -7,8 +7,9 @@ const webp = require('webp-converter')
 const ffmpeg = require('fluent-ffmpeg')
 
 const configFile = JSON.parse(fs.readFileSync('config.json', 'utf-8'))
-// replace your telegram bot tocken here
+// replace your telegram bot token here
 const token = configFile.token
+const whitelist = configFile.whitelist
 const bot = new TelegramBot(token, { polling: true })
 
 // download file using node-fetch
@@ -31,6 +32,10 @@ bot.on('message', (msg) => {
   // only process stickers
   if (msg.sticker) {
     if (msg.sticker.is_animated) {
+      if (whitelist.indexOf(msg.from.id) === -1) {
+        bot.sendMessage(chatId, 'Due to the high cost of the animated sticker converting, this feature is only for authorized users.', { reply_to_message_id: messageId })
+        return
+      }
       // processing animated sticker
       bot.sendMessage(chatId, 'Animated sticker detected.\nDecoding and Processing...', { reply_to_message_id: messageId })
         .then((newmsg) => {
