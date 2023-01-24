@@ -1,6 +1,8 @@
 # telegram_sticker_downloader
 A telegram bot to download telegram stickers and animated stickers. Written in node.js.
 
+## Due to the modification of the upstream `tgs-to-gif`, this project is archived.
+
 ## Dependencies
 
 Node.js
