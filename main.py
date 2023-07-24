@@ -26,12 +26,34 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
+    await update.message.reply_text(
+        "This bot is used for download all kinds of stickers.\nNow under construction, be patience.")
 
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     await update.message.reply_text(update.message.text)
+
+
+async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    file = await update.message.effective_attachment.get_file()
+    print(file)
+    await file.download_to_drive(f'files/{file.file_id}.webp')
+    pass
+
+
+async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    file = await update.message.effective_attachment.get_file()
+    print(file)
+    await file.download_to_drive(f'files/{file.file_id}.tgs')
+    pass
+
+
+async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    file = await update.message.effective_attachment.get_file()
+    print(file)
+    await file.download_to_drive(f'files/{file.file_id}.webm')
+    pass
 
 
 def main(bot_token: str) -> None:
@@ -45,6 +67,11 @@ def main(bot_token: str) -> None:
 
     # on non command i.e message - echo the message on Telegram
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+
+    # handle stickers
+    application.add_handler(MessageHandler(filters.Sticker.STATIC, static_sticker))
+    application.add_handler(MessageHandler(filters.Sticker.ANIMATED, animated_sticker))
+    application.add_handler(MessageHandler(filters.Sticker.VIDEO, video_sticker))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
