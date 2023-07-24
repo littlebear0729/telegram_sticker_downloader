@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "telegram-sticker-downloader"
+version = "0.1.0"
+description = "A telegram bot to download telegram stickers and animated stickers."
+authors = ["littlebear0729@protonmail.com", "cyunrei@gmail.com"]
+readme = "README.md"
+packages = [{ include = "telegram_sticker_downloader" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-telegram-bot = "^20.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
