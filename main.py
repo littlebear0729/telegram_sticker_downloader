@@ -1,5 +1,8 @@
 import json
 import logging
+from webptools import dwebp
+
+from PIL import Image
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -36,10 +39,15 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    r = await update.message.reply_text('Static sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
     await file.download_to_drive(f'files/{file.file_id}.webp')
-    pass
+    await r.edit_text('Sticker downloaded, converting...')
+    dwebp(f'files/{file.file_id}.webp', f'files/{file.file_id}.png', option='-o', logging='-v')
+    await r.edit_text('Convert completed, sending file...')
+    await update.message.reply_document(f'files/{file.file_id}.png', filename=f'{file.file_id[-8:]}.png.1')
+    await r.delete()
 
 
 async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
