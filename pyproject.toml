@@ -9,6 +9,7 @@ packages = [{ include = "telegram_sticker_downloader" }]
 [tool.poetry.dependencies]
 python = "^3.11"
 python-telegram-bot = "^20.4"
+pillow = "^10.0.0"
 
 
 [build-system]
