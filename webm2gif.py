@@ -1,10 +1,14 @@
 import os
+import shutil
 import subprocess
 import tempfile
+from datetime import datetime
 
 from PIL import Image
 
-tmp_dir = tempfile.mkdtemp(prefix=f'web2pngs-')
+current_date = datetime.now().strftime('%Y-%m-%d')
+
+tmp_dir = tempfile.mkdtemp(prefix=f'web2pngs-{current_date}-')
 
 
 def _webm2pngs(webm_path: str) -> str:
@@ -94,6 +98,21 @@ def _pngs2gif(pngs_dir_path: str, duration=50, loop=0, transparency=0) -> str:
     return result_gif_path
 
 
+def _clear_files_by_extension(directory_path, file_extension):
+    if not os.path.exists(directory_path):
+        return
+    files = os.listdir(directory_path)
+
+    files_to_delete = [file for file in files if file.lower().endswith(file_extension.lower())]
+
+    if not files_to_delete:
+        return
+
+    for file_name in files_to_delete:
+        file_path = os.path.join(directory_path, file_name)
+        os.remove(file_path)
+
+
 def webm2gif(webm_path: str, *args, **kwargs) -> str:
     """
         Converts a WebM video to a GIF animation.
@@ -120,4 +139,22 @@ def webm2gif(webm_path: str, *args, **kwargs) -> str:
             print("GIF animation saved at:", result_gif_path)
         """
     pngs_dir_path = _webm2pngs(webm_path)
-    return _pngs2gif(pngs_dir_path, *args, **kwargs)
+    gif_path = _pngs2gif(pngs_dir_path, *args, **kwargs)
+    _clear_files_by_extension(pngs_dir_path, 'png')
+    return gif_path
+
+
+def tmp_dir_remove():
+    if os.path.exists(tmp_dir):
+        shutil.rmtree(tmp_dir)
+
+
+def tmp_dir_clear():
+    if os.path.exists(tmp_dir):
+        for root, dirs, files in os.walk(tmp_dir, topdown=False):
+            for file in files:
+                file_path = os.path.join(root, file)
+                os.remove(file_path)
+            for dir in dirs:
+                dir_path = os.path.join(root, dir)
+                os.rmdir(dir_path)
