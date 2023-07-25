@@ -1,3 +1,7 @@
 {
-  "token": "REPLACE YOUR TELEGRAM BOT TOKEN HERE"
+  "token": "REPLACE YOUR TELEGRAM BOT TOKEN HERE",
+  "admin": [
+  ],
+  "whitelist": [
+  ]
 }

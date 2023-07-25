@@ -34,12 +34,41 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "This bot is used for download all kinds of stickers.\nNow under construction, be patience.")
 
 
+async def add_whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    print(update.message.text)
+    user_id = update.message.text.split(' ')[-1]
+    try:
+        config['whitelist'].append(int(user_id))
+        with open('config.json', 'w') as f:
+            f.write(json.dumps(config))
+    except Exception as e:
+        print(e)
+        await update.message.reply_text(str(e))
+    else:
+        await update.message.reply_text(f'Add {user_id} to whitelist, current whitelist: {whitelist}')
+
+
+async def list_whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(f'Current admin:{admin}\n\nCurrent whitelist:{whitelist}')
+
+
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
     await update.message.reply_text(update.message.text)
+    user_id = update.message.chat_id
+    print(user_id, user_id in admin, user_id in whitelist)
+
+
+def has_permission(chat_id: int) -> bool:
+    if chat_id in admin or chat_id in whitelist:
+        return True
+    else:
+        return False
 
 
 async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not has_permission(update.message.chat_id):
+        return
     r = await update.message.reply_text('Static sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
@@ -55,6 +84,8 @@ async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not has_permission(update.message.chat_id):
+        return
     r = await update.message.reply_text('Animated sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
@@ -70,6 +101,8 @@ async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not has_permission(update.message.chat_id):
+        return
     r = await update.message.reply_text('Video sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
@@ -85,6 +118,7 @@ async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 def main(bot_token: str) -> None:
+    print(admin, whitelist)
     """Start the bot."""
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(bot_token).build()
@@ -92,6 +126,8 @@ def main(bot_token: str) -> None:
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("add_whitelist", add_whitelist, filters=filters.User(admin)))
+    application.add_handler(CommandHandler("list_whitelist", list_whitelist, filters=filters.User(admin)))
 
     # on non command i.e message - echo the message on Telegram
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
@@ -112,7 +148,12 @@ def read_config():
     return conf
 
 
+admin = []
+whitelist = []
+
 if __name__ == "__main__":
     config = read_config()
     token = config['token']
+    admin = config['admin']
+    whitelist = config['whitelist']
     main(token)
