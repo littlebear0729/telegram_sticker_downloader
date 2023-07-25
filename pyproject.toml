@@ -10,6 +10,7 @@ packages = [{ include = "telegram_sticker_downloader" }]
 python = "^3.11"
 python-telegram-bot = "^20.4"
 pillow = "^10.0.0"
+docker = "^6.1.3"
 webptools = "^0.0.9"
 
 
