@@ -158,3 +158,7 @@ def tmp_dir_clear():
             for dir in dirs:
                 dir_path = os.path.join(root, dir)
                 os.rmdir(dir_path)
+
+
+if __name__ == '__main__':
+    webm2gif('test.webm')

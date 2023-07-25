@@ -42,3 +42,7 @@ def tgs2gif(tgs_file_path: str, compress: bool = False) -> str:
             output_file.write(gif_content)
 
         return output_path
+
+
+if __name__ == '__main__':
+    tgs2gif('test.tgs')

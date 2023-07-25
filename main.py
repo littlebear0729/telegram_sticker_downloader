@@ -2,7 +2,8 @@ import json
 import logging
 from webptools import dwebp
 
-from PIL import Image
+from tgs2gif import tgs2gif
+from webm2gif import webm2gif
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -43,25 +44,44 @@ async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     file = await update.message.effective_attachment.get_file()
     print(file)
     await file.download_to_drive(f'files/{file.file_id}.webp')
+
     await r.edit_text('Sticker downloaded, converting...')
     dwebp(f'files/{file.file_id}.webp', f'files/{file.file_id}.png', option='-o', logging='-v')
+
     await r.edit_text('Convert completed, sending file...')
     await update.message.reply_document(f'files/{file.file_id}.png', filename=f'{file.file_id[-8:]}.png.1')
+
     await r.delete()
 
 
 async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    r = await update.message.reply_text('Animated sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
     await file.download_to_drive(f'files/{file.file_id}.tgs')
-    pass
+
+    await r.edit_text('Sticker downloaded, converting...')
+    tgs2gif(f'files/{file.file_id}.tgs')
+
+    await r.edit_text('Convert completed, sending file...')
+    await update.message.reply_document(f'files/{file.file_id}.gif', filename=f'{file.file_id[-8:]}.gif.1')
+
+    await r.delete()
 
 
 async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    r = await update.message.reply_text('Video sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
     await file.download_to_drive(f'files/{file.file_id}.webm')
-    pass
+
+    await r.edit_text('Sticker downloaded, converting...')
+    webm2gif(f'files/{file.file_id}.webm')
+
+    await r.edit_text('Convert completed, sending file...')
+    await update.message.reply_document(f'files/{file.file_id}.gif', filename=f'{file.file_id[-8:]}.gif.1')
+
+    await r.delete()
 
 
 def main(bot_token: str) -> None:
