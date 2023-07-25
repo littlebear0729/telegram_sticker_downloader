@@ -92,10 +92,10 @@ async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     await file.download_to_drive(f'files/{file.file_id}.tgs')
 
     await r.edit_text('Sticker downloaded, converting...')
-    tgs2gif(f'files/{file.file_id}.tgs')
+    output_file = tgs2gif(f'files/{file.file_id}.tgs')
 
     await r.edit_text('Convert completed, sending file...')
-    await update.message.reply_document(f'files/{file.file_id}.gif', filename=f'{file.file_id[-8:]}.gif.1')
+    await update.message.reply_document(output_file, filename=f'{file.file_id[-8:]}.gif.1')
 
     await r.delete()
 
@@ -109,10 +109,10 @@ async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await file.download_to_drive(f'files/{file.file_id}.webm')
 
     await r.edit_text('Sticker downloaded, converting...')
-    webm2gif(f'files/{file.file_id}.webm')
+    output_file = webm2gif(f'files/{file.file_id}.webm')
 
     await r.edit_text('Convert completed, sending file...')
-    await update.message.reply_document(f'files/{file.file_id}.gif', filename=f'{file.file_id[-8:]}.gif.1')
+    await update.message.reply_document(output_file, filename=f'{file.file_id[-8:]}.gif.1')
 
     await r.delete()
 
@@ -121,7 +121,7 @@ def main(bot_token: str) -> None:
     print(admin, whitelist)
     """Start the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token(bot_token).build()
+    application = Application.builder().token(bot_token).proxy_url('http://localhost:1089').build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))

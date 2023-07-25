@@ -184,6 +184,7 @@ certifi = "*"
 httpcore = ">=0.15.0,<0.18.0"
 idna = "*"
 sniffio = "*"
+socksio = {version = "==1.*", optional = true, markers = "extra == \"socks\""}
 
 [package.extras]
 brotli = ["brotli", "brotlicffi"]
@@ -294,7 +295,10 @@ files = [
 ]
 
 [package.dependencies]
-httpx = ">=0.24.1,<0.25.0"
+httpx = [
+    {version = ">=0.24.1,<0.25.0"},
+    {version = "*", extras = ["socks"], optional = true, markers = "extra == \"socks\""},
+]
 
 [package.extras]
 all = ["APScheduler (>=3.10.1,<3.11.0)", "aiolimiter (>=1.1.0,<1.2.0)", "cachetools (>=5.3.1,<5.4.0)", "cryptography (>=39.0.1)", "httpx[http2]", "httpx[socks]", "pytz (>=2018.6)", "tornado (>=6.2,<7.0)"]
@@ -363,6 +367,17 @@ files = [
 ]
 
 [[package]]
+name = "socksio"
+version = "1.0.0"
+description = "Sans-I/O implementation of SOCKS4, SOCKS4A, and SOCKS5."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "socksio-1.0.0-py3-none-any.whl", hash = "sha256:95dc1f15f9b34e8d7b16f06d74b8ccf48f609af32ab33c608d08761c5dcbb1f3"},
+    {file = "socksio-1.0.0.tar.gz", hash = "sha256:f88beb3da5b5c38b9890469de67d0cb0f9d494b78b106ca1845f96c10b91c4ac"},
+]
+
+[[package]]
 name = "urllib3"
 version = "2.0.4"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -421,4 +436,4 @@ test = ["websockets"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "9171689483086082e0f3612c717176dbe648514038c1d5ceb14700c23cf13f0f"
+content-hash = "23ff7e980069963f13cf521916ad2e76bd88677a1595bfefb93d93d9f260eede"
