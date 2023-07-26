@@ -1,10 +1,13 @@
 import json
+import os
 import logging
+import shutil
+
 from webptools import dwebp
 
-# from tgs2gif import tgs2gif
-# from webm2gif import webm2gif
-from telegram import ForceReply, Update
+from tgs2gif import tgs2gif
+from webm2gif import webm2gif
+from telegram import ForceReply, Update, Sticker
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # Enable logging
@@ -66,9 +69,21 @@ def has_permission(chat_id: int) -> bool:
         return False
 
 
-async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not has_permission(update.message.chat_id):
         return
+    if update.message.sticker.is_animated:
+        # Animated sticker
+        await animated_sticker(update, context)
+    elif update.message.sticker.is_video:
+        # Video sticker
+        await video_sticker(update, context)
+    else:
+        # Static sticker
+        await static_sticker(update, context)
+
+
+async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     r = await update.message.reply_text('Static sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
@@ -84,15 +99,13 @@ async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not has_permission(update.message.chat_id):
-        return
     r = await update.message.reply_text('Animated sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
     await file.download_to_drive(f'files/{file.file_unique_id}.tgs')
 
     await r.edit_text('Sticker downloaded, converting...')
-    # tgs2gif(f'files/{file.file_unique_id}.tgs')
+    tgs2gif(f'files/{file.file_unique_id}.tgs')
 
     await r.edit_text('Convert completed, sending file...')
     await update.message.reply_document(f'files/{file.file_unique_id}.gif', filename=f'{file.file_unique_id}.gif.1')
@@ -101,15 +114,13 @@ async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 
 async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not has_permission(update.message.chat_id):
-        return
     r = await update.message.reply_text('Video sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
     await file.download_to_drive(f'files/{file.file_unique_id}.webm')
 
     await r.edit_text('Sticker downloaded, converting...')
-    # webm2gif(f'files/{file.file_unique_id}.webm')
+    webm2gif(f'files/{file.file_unique_id}.webm')
 
     await r.edit_text('Convert completed, sending file...')
     await update.message.reply_document(f'files/{file.file_unique_id}.gif', filename=f'{file.file_unique_id}.gif.1')
@@ -120,10 +131,37 @@ async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 async def sticker_set(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     sticker_set_name = update.message.text.split('/')[-1]
     print(sticker_set_name)
+    r = await update.message.reply_text('Sticker set detected, please wait until all sticker converted...')
     set = await context.bot.get_sticker_set(sticker_set_name)
     print(set.is_animated, set.is_video, set.title)
+
+    # Create a folder with sticker set name
+    os.mkdir(f'files/{sticker_set_name}')
     for sticker in set.stickers:
         print(sticker)
+        # Download sticker
+        file = await sticker.get_file()
+        await file.download_to_drive(f'files/{sticker_set_name}/{sticker.file_unique_id}')
+
+        if sticker.is_video:
+            # Video sticker
+            pass
+        elif sticker.is_animated:
+            # Animated sticker
+            pass
+        else:
+            # Static sticker
+            pass
+
+    # Zip all stickers under this folder
+    await r.edit_text('Convert finished, zipping files...')
+    shutil.make_archive(f'files/{sticker_set_name}', 'zip', f'files/{sticker_set_name}')
+
+    # Send zip file
+    await r.edit_text('Send zip file...')
+    await update.message.reply_document(f'files/{sticker_set_name}.zip')
+
+    await r.delete()
 
 
 def main(bot_token: str) -> None:
@@ -143,9 +181,7 @@ def main(bot_token: str) -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # handle stickers
-    application.add_handler(MessageHandler(filters.Sticker.STATIC, static_sticker))
-    application.add_handler(MessageHandler(filters.Sticker.ANIMATED, animated_sticker))
-    application.add_handler(MessageHandler(filters.Sticker.VIDEO, video_sticker))
+    application.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
