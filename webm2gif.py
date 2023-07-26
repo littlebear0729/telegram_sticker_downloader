@@ -161,4 +161,4 @@ def tmp_dir_clear():
 
 
 if __name__ == '__main__':
-    webm2gif('test.webm')
+    print(webm2gif('test.webm'))

@@ -45,4 +45,4 @@ def tgs2gif(tgs_file_path: str, compress: bool = False) -> str:
 
 
 if __name__ == '__main__':
-    tgs2gif('test.tgs')
+    print(tgs2gif('test.tgs'))
