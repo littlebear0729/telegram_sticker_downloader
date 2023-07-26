@@ -2,8 +2,8 @@ import json
 import logging
 from webptools import dwebp
 
-from tgs2gif import tgs2gif
-from webm2gif import webm2gif
+# from tgs2gif import tgs2gif
+# from webm2gif import webm2gif
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -72,13 +72,13 @@ async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     r = await update.message.reply_text('Static sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
-    await file.download_to_drive(f'files/{file.file_id}.webp')
+    await file.download_to_drive(f'files/{file.file_unique_id}.webp')
 
     await r.edit_text('Sticker downloaded, converting...')
-    dwebp(f'files/{file.file_id}.webp', f'files/{file.file_id}.png', option='-o', logging='-v')
+    dwebp(f'files/{file.file_unique_id}.webp', f'files/{file.file_unique_id}.png', option='-o', logging='-v')
 
     await r.edit_text('Convert completed, sending file...')
-    await update.message.reply_document(f'files/{file.file_id}.png', filename=f'{file.file_id[-8:]}.png.1')
+    await update.message.reply_document(f'files/{file.file_unique_id}.png', filename=f'{file.file_unique_id}.png.1')
 
     await r.delete()
 
@@ -89,13 +89,13 @@ async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     r = await update.message.reply_text('Animated sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
-    await file.download_to_drive(f'files/{file.file_id}.tgs')
+    await file.download_to_drive(f'files/{file.file_unique_id}.tgs')
 
     await r.edit_text('Sticker downloaded, converting...')
-    tgs2gif(f'files/{file.file_id}.tgs')
+    # tgs2gif(f'files/{file.file_unique_id}.tgs')
 
     await r.edit_text('Convert completed, sending file...')
-    await update.message.reply_document(f'files/{file.file_id}.gif', filename=f'{file.file_id[-8:]}.gif.1')
+    await update.message.reply_document(f'files/{file.file_unique_id}.gif', filename=f'{file.file_unique_id}.gif.1')
 
     await r.delete()
 
@@ -106,15 +106,24 @@ async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     r = await update.message.reply_text('Video sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
     print(file)
-    await file.download_to_drive(f'files/{file.file_id}.webm')
+    await file.download_to_drive(f'files/{file.file_unique_id}.webm')
 
     await r.edit_text('Sticker downloaded, converting...')
-    webm2gif(f'files/{file.file_id}.webm')
+    # webm2gif(f'files/{file.file_unique_id}.webm')
 
     await r.edit_text('Convert completed, sending file...')
-    await update.message.reply_document(f'files/{file.file_id}.gif', filename=f'{file.file_id[-8:]}.gif.1')
+    await update.message.reply_document(f'files/{file.file_unique_id}.gif', filename=f'{file.file_unique_id}.gif.1')
 
     await r.delete()
+
+
+async def sticker_set(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    sticker_set_name = update.message.text.split('/')[-1]
+    print(sticker_set_name)
+    set = await context.bot.get_sticker_set(sticker_set_name)
+    print(set.is_animated, set.is_video, set.title)
+    for sticker in set.stickers:
+        print(sticker)
 
 
 def main(bot_token: str) -> None:
@@ -130,6 +139,7 @@ def main(bot_token: str) -> None:
     application.add_handler(CommandHandler("list_whitelist", list_whitelist, filters=filters.User(admin)))
 
     # on non command i.e message - echo the message on Telegram
+    application.add_handler(MessageHandler(filters.Regex(r'^https://t.me/addstickers/'), sticker_set))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # handle stickers
