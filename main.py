@@ -106,7 +106,6 @@ async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     await r.edit_text('Sticker downloaded, converting...')
     output_file = tgs2gif(f'files/{file.file_unique_id}.tgs')
-    tgs2gif(f'files/{file.file_unique_id}.tgs')
 
     await r.edit_text('Convert completed, sending file...')
     await update.message.reply_document(output_file, filename=f'{file.file_unique_id}.gif.1')
@@ -122,7 +121,6 @@ async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     await r.edit_text('Sticker downloaded, converting...')
     output_file = webm2gif(f'files/{file.file_unique_id}.webm')
-    webm2gif(f'files/{file.file_unique_id}.webm')
 
     await r.edit_text('Convert completed, sending file...')
     await update.message.reply_document(output_file, filename=f'{file.file_unique_id}.gif.1')
