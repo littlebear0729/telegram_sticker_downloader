@@ -1,14 +1,14 @@
 import json
-import os
 import logging
+import os
 import shutil
 
+from telegram import ForceReply, Update
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from webptools import dwebp
 
 from tgs2gif import tgs2gif
 from webm2gif import webm2gif
-from telegram import ForceReply, Update, Sticker
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # Enable logging
 logging.basicConfig(
@@ -136,22 +136,32 @@ async def sticker_set(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     print(set.is_animated, set.is_video, set.title)
 
     # Create a folder with sticker set name
-    os.mkdir(f'files/{sticker_set_name}')
-    for sticker in set.stickers:
-        print(sticker)
+    os.makedirs(f'files/{sticker_set_name}', exist_ok=True)
+    for idx, sticker in enumerate(set.stickers):
+        await r.edit_text(f'Processing sticker {idx}/{len(set.stickers)} ...')
+        print(sticker, idx)
         # Download sticker
         file = await sticker.get_file()
         await file.download_to_drive(f'files/{sticker_set_name}/{sticker.file_unique_id}')
 
         if sticker.is_video:
             # Video sticker
-            pass
+            output_file = webm2gif(f'files/{sticker_set_name}/{sticker.file_unique_id}')
+            try:
+                shutil.copyfile(output_file, f'files/{sticker_set_name}/{sticker.file_unique_id}.gif')
+            except shutil.SameFileError:
+                pass
         elif sticker.is_animated:
             # Animated sticker
-            pass
+            output_file = tgs2gif(f'files/{sticker_set_name}/{sticker.file_unique_id}')
+            try:
+                shutil.copyfile(output_file, f'files/{sticker_set_name}/{sticker.file_unique_id}.gif')
+            except shutil.SameFileError:
+                pass
         else:
             # Static sticker
-            pass
+            dwebp(f'files/{sticker_set_name}/{sticker.file_unique_id}',
+                  f'files/{sticker_set_name}/{sticker.file_unique_id}.png', option='-o', logging='-v')
 
     # Zip all stickers under this folder
     await r.edit_text('Convert finished, zipping files...')
