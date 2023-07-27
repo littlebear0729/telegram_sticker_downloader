@@ -32,7 +32,7 @@ def webm2gif(webm_path: str, *args, **kwargs) -> str:
         print("ffmpeg command not found")
         exit(1)
 
-    command = ['ffmpeg', '-c', 'libvpx-vp9', '-i', webm_path, '-lavfi', 'split[v],palettegen,[v]paletteuse',
+    command = ['ffmpeg', '-y', '-c', 'libvpx-vp9', '-i', webm_path, '-lavfi', 'split[v],palettegen,[v]paletteuse',
                f'{webm_path}.gif']
 
     try:
