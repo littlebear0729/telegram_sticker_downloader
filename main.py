@@ -188,12 +188,12 @@ def main(bot_token: str) -> None:
     application.add_handler(CommandHandler("add_whitelist", add_whitelist, filters=filters.User(admin)))
     application.add_handler(CommandHandler("list_whitelist", list_whitelist, filters=filters.User(admin)))
 
-    # on non command i.e message - echo the message on Telegram
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-
     # handle stickers
     application.add_handler(MessageHandler(filters.Regex(r'^https://t.me/addstickers/'), sticker_set))
     application.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
+
+    # on non command i.e message - echo the message on Telegram
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
