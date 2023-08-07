@@ -129,6 +129,8 @@ async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 
 async def sticker_set(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not has_permission(update.message.chat_id):
+        return
     sticker_set_name = update.message.text.split('/')[-1]
     print(sticker_set_name)
     r = await update.message.reply_text('Sticker set detected, please wait until all sticker converted...')
@@ -187,10 +189,10 @@ def main(bot_token: str) -> None:
     application.add_handler(CommandHandler("list_whitelist", list_whitelist, filters=filters.User(admin)))
 
     # on non command i.e message - echo the message on Telegram
-    application.add_handler(MessageHandler(filters.Regex(r'^https://t.me/addstickers/'), sticker_set))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # handle stickers
+    application.add_handler(MessageHandler(filters.Regex(r'^https://t.me/addstickers/'), sticker_set))
     application.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
 
     # Run the bot until the user presses Ctrl-C
