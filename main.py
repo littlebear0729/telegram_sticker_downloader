@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 
+import telegram
 from PIL import Image
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -85,8 +86,12 @@ async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     r = await update.message.reply_text('Static sticker detected, downloading...')
-    file = await update.message.effective_attachment.get_file()
-    print(file)
+    try:
+        file = await update.message.effective_attachment.get_file()
+    except telegram.error.TimedOut:
+        await r.edit_text('Sticker retrieval timeout')
+        return
+
     await file.download_to_drive(f'files/{file.file_unique_id}.webp')
 
     await r.edit_text('Sticker downloaded, converting...')
@@ -138,8 +143,11 @@ async def sticker_set(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     for idx, sticker in enumerate(set.stickers):
         await r.edit_text(f'Processing sticker {idx}/{len(set.stickers)} ...')
         # Download sticker
-        file = await sticker.get_file()
-        await file.download_to_drive(f'files/{sticker_set_name}/{sticker.file_unique_id}')
+        try:
+            file = await sticker.get_file()
+            await file.download_to_drive(f'files/{sticker_set_name}/{sticker.file_unique_id}')
+        except Exception:
+            continue
 
         if sticker.is_video:
             # Video sticker
