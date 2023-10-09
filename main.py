@@ -3,9 +3,9 @@ import logging
 import os
 import shutil
 
+from PIL import Image
 from telegram import ForceReply, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
-from webptools import dwebp
 
 from tgs2gif import tgs2gif
 from webm2gif import webm2gif
@@ -90,10 +90,10 @@ async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await file.download_to_drive(f'files/{file.file_unique_id}.webp')
 
     await r.edit_text('Sticker downloaded, converting...')
-    dwebp(f'files/{file.file_unique_id}.webp', f'files/{file.file_unique_id}.png', option='-o', logging='-v')
+    Image.open(f'files/{file.file_unique_id}.webp').convert('RGBA').save(f'files/{file.file_unique_id}.png', 'png')
 
     await r.edit_text('Convert completed, sending file...')
-    await update.message.reply_document(f'files/{file.file_unique_id}.png', filename=f'{file.file_unique_id}.png.1')
+    await update.message.reply_document(f'files/{file.file_unique_id}.png', filename=f'{file.file_unique_id}.png')
 
     await r.delete()
 
@@ -101,7 +101,6 @@ async def static_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     r = await update.message.reply_text('Animated sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
-    print(file)
     await file.download_to_drive(f'files/{file.file_unique_id}.tgs')
 
     await r.edit_text('Sticker downloaded, converting...')
@@ -116,7 +115,6 @@ async def animated_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 async def video_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     r = await update.message.reply_text('Video sticker detected, downloading...')
     file = await update.message.effective_attachment.get_file()
-    print(file)
     await file.download_to_drive(f'files/{file.file_unique_id}.webm')
 
     await r.edit_text('Sticker downloaded, converting...')
@@ -132,16 +130,13 @@ async def sticker_set(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not has_permission(update.message.chat_id):
         return
     sticker_set_name = update.message.text.split('/')[-1]
-    print(sticker_set_name)
     r = await update.message.reply_text('Sticker set detected, please wait until all sticker converted...')
     set = await context.bot.get_sticker_set(sticker_set_name)
-    print(set.is_animated, set.is_video, set.title)
 
     # Create a folder with sticker set name
     os.makedirs(f'files/{sticker_set_name}', exist_ok=True)
     for idx, sticker in enumerate(set.stickers):
         await r.edit_text(f'Processing sticker {idx}/{len(set.stickers)} ...')
-        print(sticker, idx)
         # Download sticker
         file = await sticker.get_file()
         await file.download_to_drive(f'files/{sticker_set_name}/{sticker.file_unique_id}')
@@ -162,8 +157,8 @@ async def sticker_set(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                 pass
         else:
             # Static sticker
-            dwebp(f'files/{sticker_set_name}/{sticker.file_unique_id}',
-                  f'files/{sticker_set_name}/{sticker.file_unique_id}.png', option='-o', logging='-v')
+            Image.open(f'files/{sticker_set_name}/{sticker.file_unique_id}').convert('RGBA').save(
+                f'files/{sticker_set_name}/{sticker.file_unique_id}.png', 'png')
 
     # Zip all stickers under this folder
     await r.edit_text('Convert finished, zipping files...')
