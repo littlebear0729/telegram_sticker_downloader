@@ -180,7 +180,7 @@ def main(bot_token: str) -> None:
     print(admin, whitelist)
     """Start the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token(bot_token).proxy_url('http://localhost:1089').build()
+    application = Application.builder().token(bot_token).build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
